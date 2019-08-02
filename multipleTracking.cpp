@@ -53,69 +53,6 @@ vector<Point> glovePath;
 
 vector<Point> perfectPathPoints;
 
-// void analyzePath()
-// {
-//     int index = 0;
-//     int currXVal = glovePath[0].x;
-//     bool matchFound = false;
-//     int startHerePerf;
-//     int startHereGlove;
-
-//     while (!matchFound)
-//     {
-//         for (int k = 0; k < perfectPathPoints.size() - 1; k++)
-//         {
-//             if (perfectPathPoints[k].x == currXVal)
-//             {
-//                 matchFound = true;
-//                 startHerePerf = k;
-//                 startHereGlove = index;
-//                 std::cout << "Match found" << endl;
-//             }
-//         }
-//         if (!matchFound)
-//         {
-//             index++;
-//             currXVal = glovePath[index].x;
-//             std::cout << "No match found" << endl;
-//         }
-//     }
-//     std::cout << "Out of while now" << endl;
-
-//     //Finds what the shortest array is to avoid an outOfBounds error
-//     int newPathSize = perfectPathPoints.size() - startHerePerf;
-//     int newGloveSize = glovePath.size() - startHereGlove;
-//     int rulingSize;
-
-//     if (newPathSize > newGloveSize)
-//     {
-//         rulingSize = newGloveSize;
-//     }
-//     if (newPathSize <= newGloveSize)
-//     {
-//         rulingSize = newPathSize;
-//     }
-
-//     std::cout << "Perfect Path: " << perfectPathPoints.size() << " Glove Path: " << glovePath.size() << endl;
-//     std::cout << "Perfect Path: " << newPathSize << " Glove Path: " << newGloveSize << endl;
-//     std::cout << "Start val: " << startHereGlove << " Ruling size: " << rulingSize << endl;
-//     //begin comparing
-//     for (int m = startHereGlove; m < rulingSize; m++)
-//     {
-//         std::cout << "Begin comparing" << endl;
-//         if ((glovePath[m].y - perfectPathPoints[startHerePerf].y) <= 10)
-//         {
-//             std::cout << "___________________________________" << endl;
-//         }
-//         else
-//         {
-//             for (int l = 0; l < 10; l++)
-//                 std::cout << "WRONG" << endl;
-//         }
-//         startHerePerf++;
-//     }
-//     std::cout << "Done comparing" << endl;
-// }
 
 //glove points being tested against the perfect path
 Point firstSectionGloveStart;
@@ -215,6 +152,8 @@ bool punchIsDone = false;
 bool endIsFound = false;
 bool pt2EndIsFound = false;
 
+bool needStartingPoint = true;
+
 //draws the glove path line at multiple stages of the punch
 void checkGlovePathAndDraw(Mat imgFrame, int distanceFromStart)
 {
@@ -252,6 +191,19 @@ void checkGlovePathAndDraw(Mat imgFrame, int distanceFromStart)
             if (isReturning && isHome)
             {
                 std::cout << "Punch done" << endl;
+                
+                if (!pt2EndIsFound)
+                {
+                    secondSectionGloveEnd = glovePath.at(j);
+                    analyzePath(3);
+                    std::cout << "Second Section End Here" << endl;
+                }
+                endIsFound = false;
+                // showPunchPath();
+                // punchFrames.clear();
+                isReturning = false;
+                punchIsDone = true;
+                needStartingPoint = true;
                 punchEvaluation = (firstPoint && secondPoint && thirdPoint);
                 if (!punchEvaluation)
                 {
@@ -264,17 +216,6 @@ void checkGlovePathAndDraw(Mat imgFrame, int distanceFromStart)
                 {
                     std::cout << "_________ GOOD PUNCH ____________" << endl;
                 }
-                if (!pt2EndIsFound)
-                {
-                    secondSectionGloveEnd = glovePath.at(j);
-                    analyzePath(3);
-                    std::cout << "Second Section End Here" << endl;
-                }
-                endIsFound = false;
-                // showPunchPath();
-                // punchFrames.clear();
-                isReturning = false;
-                punchIsDone = true;
             }
             if (j > 1 && glovePath.at(j).x > glovePath.at(j + 1).x && distanceFromStart > 200)
             {
@@ -307,7 +248,7 @@ void drawPerfectLine(Mat currFrame, Point headPos, Point glovePos, int distanceF
 {
     if (!(startingPoint.x > 0))
     {
-        startingPoint = Point(headPos.x + (distanceFromStart / 2), glovePos.y - 70);
+        startingPoint = Point(headPos.x + (distanceFromStart / 2), glovePos.y-70);
     }
     int type = 1;
 
@@ -344,7 +285,7 @@ double checkForStart(double headx, double y, double glovex, double b)
     return glovex - headx;
 }
 
-bool needStartingPoint = true;
+
 
 int main(int argc, char **argv)
 {
@@ -447,12 +388,15 @@ int main(int argc, char **argv)
         {
             rectangle(frame, multiTracker->getObjects()[i], colors[i], 2, 1);
         }
+
+        //labels each bounded box
         for (int n = 0; n < bboxes.size(); n++)
         {
             string text = "Box number: ";
             text += std::to_string(n);
             putText(frame, text, Point(multiTracker->getObjects()[n].x, multiTracker->getObjects()[n].y), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(50, 170, 50), 2);
         }
+
         int distanceApart = checkForStart(multiTracker->getObjects()[0].x, multiTracker->getObjects()[0].y, multiTracker->getObjects()[1].x, multiTracker->getObjects()[1].y);
 
         if (distanceApart < 80)
@@ -470,7 +414,7 @@ int main(int argc, char **argv)
         else if (distanceApart > 80)
         {
             isHome = false;
-            needStartingPoint = true;
+            //needStartingPoint = true;
         }
 
         // std::cout << "X Val Head" << multiTracker->getObjects()[0].x << "\n";
@@ -489,15 +433,10 @@ int main(int argc, char **argv)
         int gloveYVal = multiTracker->getObjects()[1].y;
         Point glovePoint = Point(gloveXVal, gloveYVal);
 
-        //FIX THIS
-        // if (!punchIsDone)
-        // {
+        
+        
         glovePath.push_back(glovePoint);
-        // }
-        // if (punchIsDone)
-        // {
-        //     glovePath.clear();
-        // }
+        
         checkGlovePathAndDraw(frame, distanceApart);
 
         // Show frame
