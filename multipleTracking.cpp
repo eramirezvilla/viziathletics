@@ -27,8 +27,11 @@ void getRandomColors(vector<Scalar> &colors, int numColors)
         colors.push_back(Scalar(rng.uniform(0, 255), rng.uniform(0, 255), rng.uniform(0, 255)));
 }
 
+//boolean values determine where the glove is in relation to the head
 bool isHome = false;
 bool isReturning = false;
+
+//points for where the glove is moving
 vector<Point> glovePath;
 
 /**
@@ -46,6 +49,8 @@ vector<Point> glovePath;
 //         imshow("Punch Path", punchFrames.at(n));
 //     }
 // }
+
+
 vector<Point> perfectPathPoints;
 
 // void analyzePath()
@@ -112,14 +117,18 @@ vector<Point> perfectPathPoints;
 //     std::cout << "Done comparing" << endl;
 // }
 
+//glove points being tested against the perfect path
 Point firstSectionGloveStart;
 Point firstSectionGloveEnd;
 Point secondSectionGloveEnd;
 
+//points to test against the glove's location
 Point startingPerfectPoint;
 Point endingPerfectPoint;
 Point middlePerfectPoint = Point((startingPerfectPoint.x + endingPerfectPoint.x) / 2, (startingPerfectPoint.y + endingPerfectPoint.y) / 2);
 
+
+//returns the distance between point a and b using the distance formula
 double distanceBetweenPoints(Point a, Point b)
 {
 
@@ -130,13 +139,17 @@ double distanceBetweenPoints(Point a, Point b)
     return finalResult;
 }
 
+//boolean values to determine which section is incorrect
+//punchEvaluation is determined depending on the other 3 values
 bool firstPoint;
 bool secondPoint;
 bool thirdPoint;
 bool punchEvaluation;
 
+//determines whether or not the punch thrown is correct compared to the perfect path
 void analyzePath(int whereInPunch)
 {
+    //whereInPunch refers to what stage of the punch needs to be evaluated
     switch (whereInPunch)
     {
         //starting the punch
@@ -154,7 +167,7 @@ void analyzePath(int whereInPunch)
             std::cout << "startingPerfectPoint: " << startingPerfectPoint << endl;
         }
         break;
-        //ending the punch
+        //glove is at the end of the first stage of the punch
     case 2:
         if (distanceBetweenPoints(firstSectionGloveEnd, endingPerfectPoint) < 55)
         {
@@ -162,6 +175,8 @@ void analyzePath(int whereInPunch)
             secondPoint = true;
         }
         break;
+
+        //compares the final glove position
     case 3:
         double distanceInYVals = sqrt(pow((secondSectionGloveEnd.y - startingPerfectPoint.y), 2));
         if (distanceBetweenPoints(secondSectionGloveEnd, startingPerfectPoint) < 350 && distanceInYVals < 55)
@@ -192,6 +207,7 @@ void analyzePath(int whereInPunch)
     }
 }
 
+//sets what the user's furthest reach is after the first punch is thrown
 int furthestReach = 480;
 bool reachIsSet = false;
 bool punchIsDone = false;
@@ -199,6 +215,7 @@ bool punchIsDone = false;
 bool endIsFound = false;
 bool pt2EndIsFound = false;
 
+//draws the glove path line at multiple stages of the punch
 void checkGlovePathAndDraw(Mat imgFrame, int distanceFromStart)
 {
     if (!glovePath.empty())
@@ -284,6 +301,8 @@ Point startingPoint;
  * Once the punch is finished properly then the next number is read from the vector
  */
 
+
+//draws the perfect path line
 void drawPerfectLine(Mat currFrame, Point headPos, Point glovePos, int distanceFromStart)
 {
     if (!(startingPoint.x > 0))
@@ -318,6 +337,7 @@ bool startPunch;
 
 Ptr<MultiTracker> multiTracker;
 
+//determines if the glove is in starting position
 double checkForStart(double headx, double y, double glovex, double b)
 {
 
@@ -329,6 +349,7 @@ bool needStartingPoint = true;
 int main(int argc, char **argv)
 {
 
+    //vector to hold combination of punches for a full workout
     vector<int> combinationOfPunches;
     combinationOfPunches.push_back(1);
     combinationOfPunches.push_back(2);
